@@ -612,13 +612,19 @@ NSUInteger DeviceSystemMajorVersion() {
     {
         _lowerHandle.highlighted = YES;
         _lowerTouchOffset = touchPoint.x - _lowerHandle.center.x;
-    }
-    
-    if(CGRectContainsPoint(UIEdgeInsetsInsetRect(_upperHandle.frame, self.upperTouchEdgeInsets), touchPoint))
+    } else if(CGRectContainsPoint(UIEdgeInsetsInsetRect(_upperHandle.frame, self.upperTouchEdgeInsets), touchPoint))
     {
         _upperHandle.highlighted = YES;
         _upperTouchOffset = touchPoint.x - _upperHandle.center.x;
+    } else if(CGRectContainsPoint(_track.frame, touchPoint))
+    {
+        _lowerHandle.highlighted = YES;
+        _lowerTouchOffset = touchPoint.x - _lowerHandle.center.x;
+        _upperHandle.highlighted = YES;
+        _upperTouchOffset = touchPoint.x - _upperHandle.center.x;
+        NSLog(@"offsets, %f, %f", _lowerTouchOffset, _upperTouchOffset);
     }
+    
     
     _stepValueInternal= _stepValueContinuously ? _stepValue : 0.0f;
     
@@ -634,7 +640,12 @@ NSUInteger DeviceSystemMajorVersion() {
     
     CGPoint touchPoint = [touch locationInView:self];
     
-    if(_lowerHandle.highlighted)
+    if (_lowerHandle.highlighted && _upperHandle.highlighted) {
+        float newLowValue = [self lowerValueForCenterX:(touchPoint.x - _lowerTouchOffset)];
+        float newHighValue = [self upperValueForCenterX:(touchPoint.x - _upperTouchOffset)];
+        
+        [self setLowerValue:newLowValue upperValue:newHighValue animated:_stepValueContinuously ? YES : NO];
+    } else if(_lowerHandle.highlighted)
     {
         //get new lower value based on the touch location.
         //This is automatically contained within a valid range.
@@ -653,9 +664,7 @@ NSUInteger DeviceSystemMajorVersion() {
         {
             _lowerHandle.highlighted=NO;
         }
-    }
-    
-    if(_upperHandle.highlighted )
+    } else if(_upperHandle.highlighted )
     {
         float newValue = [self upperValueForCenterX:(touchPoint.x - _upperTouchOffset)];
 
